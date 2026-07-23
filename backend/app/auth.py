@@ -1,11 +1,21 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from dotenv import load_dotenv
 
-SECRET_KEY = "cambiar-esto-por-una-clave-larga-y-secreta-en-produccion"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY no esta configurada. Crea un archivo .env en backend/ "
+        "con la linea: SECRET_KEY=tu-clave-secreta"
+    )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
