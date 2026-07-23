@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
 from app import models  # importa todos los modelos antes de create_all
-from app.routers import jugadores, socios, partidos
+from app.routers import jugadores, socios, partidos, auth
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,3 +19,4 @@ app.add_middleware(
 app.include_router(jugadores.router)
 app.include_router(socios.router)
 app.include_router(partidos.router)
+app.include_router(auth.router)

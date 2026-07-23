@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_user, requiere_admin
 from app.schemas.jugador import JugadorCreate, JugadorUpdate, JugadorOut
 from app.crud import jugador as crud_jugador
 
 router = APIRouter(prefix="/jugadores", tags=["Jugadores"])
 
 @router.post("/", response_model=JugadorOut, status_code=status.HTTP_201_CREATED)
-def crear_jugador(jugador: JugadorCreate, db: Session = Depends(get_db)):
+def crear_jugador(jugador: JugadorCreate, db: Session = Depends(get_db), admin_actual=Depends(requiere_admin)):
     existente = crud_jugador.get_jugador_por_numero(db, jugador.numero_camiseta)
     if existente:
         raise HTTPException(
@@ -23,26 +23,27 @@ def listar_jugadores(
     skip: int = 0,
     limit: int = 100,
     categoria: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    usuario_actual=Depends(get_current_user)
 ):
     return crud_jugador.get_jugadores(db, skip, limit, categoria)
 
 @router.get("/{jugador_id}", response_model=JugadorOut)
-def obtener_jugador(jugador_id: int, db: Session = Depends(get_db)):
+def obtener_jugador(jugador_id: int, db: Session = Depends(get_db), usuario_actual=Depends(get_current_user)):
     db_jugador = crud_jugador.get_jugador(db, jugador_id)
     if not db_jugador:
         raise HTTPException(status_code=404, detail="Jugador no encontrado")
     return db_jugador
 
 @router.put("/{jugador_id}", response_model=JugadorOut)
-def actualizar_jugador(jugador_id: int, jugador: JugadorUpdate, db: Session = Depends(get_db)):
+def actualizar_jugador(jugador_id: int, jugador: JugadorUpdate, db: Session = Depends(get_db), admin_actual=Depends(requiere_admin)):
     db_jugador = crud_jugador.actualizar_jugador(db, jugador_id, jugador)
     if not db_jugador:
         raise HTTPException(status_code=404, detail="Jugador no encontrado")
     return db_jugador
 
 @router.delete("/{jugador_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_jugador(jugador_id: int, db: Session = Depends(get_db)):
+def eliminar_jugador(jugador_id: int, db: Session = Depends(get_db), admin_actual=Depends(requiere_admin)):
     db_jugador = crud_jugador.eliminar_jugador(db, jugador_id)
     if not db_jugador:
         raise HTTPException(status_code=404, detail="Jugador no encontrado")
